@@ -1,0 +1,48 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Created on Fri Jan 28 19:31:13 2022
+
+@author: aokada
+"""
+
+import sys
+import argparse
+import ecsub2qsub.submit as submit
+from ecsub2qsub import __version__
+        
+def main():
+    prog = "ecsub2qsub"
+    parser = argparse.ArgumentParser(prog = prog)
+    parser.add_argument("--version", action = "version", version = prog + "-" + __version__)
+    subparsers = parser.add_subparsers()
+    
+    ##########
+    # submit 
+
+    default = submit.Argments()
+
+    submit_parser = subparsers.add_parser("submit", help = "submit job")
+    submit_parser.add_argument("--wdir", metavar = "path/to/dir", help = "output temporary data", type = str, default = default.wdir)
+    submit_parser.add_argument("--image", metavar = "/path/to/singularity/image.sif", help = "singularity image", type = str, default = default.image)
+    submit_parser.add_argument("--script", metavar = "path/to/script.sh", help = "run script", type = str, required=True)
+    submit_parser.add_argument("--tasks", metavar = "path/to/tasks.tsv", help = "parameters", type = str, required=True)
+    submit_parser.add_argument("--task-name", metavar = "task-name", help = "submit name as AWS ECS cluster name", type = str, default = default.task_name)
+    submit_parser.add_argument("--singularity-path", metavar = "/path/to/singularity", help = "path to singularity", type = str, default = default.singularity_path)
+    submit_parser.add_argument("--singularity-option", metavar = "--bind /path/to/extend/directory", help = "options of singularity", type = str, default = default.singularity_option)
+    submit_parser.add_argument("--qsub-option", metavar = "-l s_vmem=8G", help = "options of qsub", type = str, default = default.qsub_option)
+
+    submit_parser.set_defaults(func = submit.entry_point)
+
+    argv = sys.argv[1:]
+    if len(argv) < 1:
+        argv = [""]
+        
+    args = parser.parse_args(argv)
+    
+    return args.func(args)
+    
+if __name__ == "__main__":
+    print (">>> " + " ".join(sys.argv))
+    sys.exit(main())
